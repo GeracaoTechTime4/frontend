@@ -1,10 +1,16 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "@/pages/auth/LoginPage";
+
 function App() {
   return (
-    <main>
-      <h1>EscalaÁgil</h1>
-      <p>Aplicação de gerenciamento de escalas.</p>
-    </main>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        {/* Redirecionamento padrão para /login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
