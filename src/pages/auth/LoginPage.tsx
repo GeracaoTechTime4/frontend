@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { AtSign, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,6 @@ export const LoginPage: React.FC = () => {
       setIsLoading(true);
       const user = await loginUser({ email, password });
       console.log("Login bem-sucedido:", user);
-      // Aqui no futuro faremos o redirecionamento baseado no role (SUPERVISOR / EMPLOYEE)
       alert(`Bem-vindo(a), ${user.name || user.email}!`);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -109,7 +109,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-400 hover:text-slate-600 focus:outline-none transition-colors p-1"
+                  className="text-slate-400 hover:text-slate-600 focus:outline-none transition-colors p-1 cursor-pointer"
                   aria-label={showPassword ? "Ocultar senha" : "Exibir senha"}
                 >
                   {showPassword ? (
@@ -159,6 +159,19 @@ export const LoginPage: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* Rodapé: Link para Cadastre-se */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-600">
+            Não tem uma conta?{" "}
+            <Link
+              to="/cadastro"
+              className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+            >
+              Cadastre-se
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
