@@ -1,3 +1,5 @@
+import { api } from "@/services/api";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface LoginCredentials {
@@ -36,7 +38,18 @@ export async function loginUser(credentials: LoginCredentials): Promise<UserSess
     }
     // Caso o backend local não esteja rodando no momento, emite aviso claro
     throw new Error(
-      "Não foi possível conectar ao servidor. Verifique se o backend está em execução."
+      "Não foi possível conectar ao servidor. Verifique se o backend está em execução.",
+      { cause: error }
     );
   }
+}
+
+/** Usuário da sessão atual (cookie), ou `null` se não houver sessão. */
+export async function fetchSession(): Promise<UserSession | null> {
+  const data = await api<{ user: UserSession } | null>("/api/auth/get-session");
+  return data?.user ?? null;
+}
+
+export async function logoutUser(): Promise<void> {
+  await api("/api/auth/sign-out", { method: "POST", body: {} });
 }
