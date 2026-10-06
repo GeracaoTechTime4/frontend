@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AtSign, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Input } from "@/components/ui/input";
-import { loginUser } from "@/services/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export const LoginPage: React.FC = () => {
+  const { user, login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,9 +26,9 @@ export const LoginPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const user = await loginUser({ email, password });
-      console.log("Login bem-sucedido:", user);
-      alert(`Bem-vindo(a), ${user.name || user.email}!`);
+      await login({ email, password });
+      const destino = (location.state as { from?: string } | null)?.from ?? "/";
+      navigate(destino, { replace: true });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
@@ -36,6 +39,11 @@ export const LoginPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // Quem já está logado não precisa ver o formulário.
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f8fafc] relative overflow-hidden select-none">
