@@ -7,6 +7,7 @@ import RegisterPage from "@/pages/auth/RegisterPage";
 import MeusTurnosPage from "@/pages/employee/MeusTurnosPage";
 import TrocasPage from "@/pages/employee/TrocasPage";
 import AprovacoesPage from "@/pages/supervisor/AprovacoesPage";
+import GestaoTurnosPage from "@/pages/supervisor/GestaoTurnosPage";
 
 /** Cada papel começa na tela em que mais age. */
 function Inicio() {
@@ -34,6 +35,7 @@ function App() {
 
             <Route element={<ProtectedRoute roles={["SUPERVISOR"]} />}>
               <Route path="/aprovacoes" element={<AprovacoesPage />} />
+              <Route path="/gestao-turnos" element={<GestaoTurnosPage />} />
             </Route>
           </Route>
         </Route>

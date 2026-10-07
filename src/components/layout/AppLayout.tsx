@@ -14,7 +14,10 @@ const LINKS_POR_PAPEL = {
     { to: "/turnos", rotulo: "Meus turnos", icone: CalendarDays },
     { to: "/trocas", rotulo: "Trocas", icone: Repeat2 },
   ],
-  SUPERVISOR: [{ to: "/aprovacoes", rotulo: "Aprovações", icone: ShieldCheck }],
+  SUPERVISOR: [
+    { to: "/aprovacoes", rotulo: "Aprovações", icone: ShieldCheck },
+    { to: "/gestao-turnos", rotulo: "Turnos", icone: CalendarDays },
+  ],
 } as const;
 
 export function AppLayout() {

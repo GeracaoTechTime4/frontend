@@ -9,8 +9,9 @@ O funcionário A pede a troca de um turno a um colega B. B aceita ou recusa; só
 | `/turnos` | Funcionário | Lista os turnos e abre o pedido de troca (escolhe o colega) |
 | `/trocas` | Funcionário | *Para eu responder*: aceitar ou recusar. *Meus pedidos*: acompanhar e cancelar |
 | `/aprovacoes` | Supervisor | Aprovar ou rejeitar (com motivo) o que já foi aceito; filtro por estado |
+| `/gestao-turnos` | Supervisor | Cadastrar, editar e excluir turnos; listados por funcionário, do mais recente ao mais distante |
 
-As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitacao-estado.ts`](src/lib/solicitacao-estado.ts), que espelha a máquina de estados da lib `shift-swap`; o backend continua sendo quem valida. Precisa do backend com os endpoints de `/solicitacoes-troca`, `/funcionarios/colegas` e `/turnos/meus`; a URL vem de `VITE_API_URL`.
+As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitacao-estado.ts`](src/lib/solicitacao-estado.ts), que espelha a máquina de estados da lib `shift-swap`; o backend continua sendo quem valida. Precisa do backend com os endpoints de `/solicitacoes-troca`, `/funcionarios/colegas` e `/turnos/meus`; a gestão de turnos usa `GET/POST /turnos`, `PUT/DELETE /turnos/:id` e `GET /funcionarios` (exige backend com a lib `shift-swap` 0.5+); a URL vem de `VITE_API_URL`.
 
 ---
 
