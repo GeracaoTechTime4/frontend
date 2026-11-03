@@ -26,6 +26,12 @@ AWS_PROFILE=mario bun run deploy
 
 O script ([`scripts/deploy.sh`](scripts/deploy.sh)) faz o build e envia o `dist/` ao bucket: assets com hash ficam em cache por 1 ano e o `index.html` vai sem cache, então não é preciso invalidar o CloudFront.
 
+### CI/CD (GitHub Actions)
+
+O workflow [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) roda `lint` e `build` em todo PR. Em todo push na `developer`, faz também o deploy (`bun run deploy`) e confere se o CloudFront já está servindo o bundle novo.
+
+O GitHub acessa a AWS por OIDC, sem chaves guardadas: a role `github-actions-shift-swap-frontend` só pode ser assumida pela `developer` deste repositório e só escreve no bucket do front. Ela é criada pelo template `infra/github-actions-roles.yaml` do repositório do backend.
+
 ## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
