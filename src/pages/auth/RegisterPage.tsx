@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AtSign, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, User, ShieldCheck, UserCheck } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { TAMANHO_MINIMO_SENHA } from "@/services/auth";
 
 export const RegisterPage: React.FC = () => {
+  const { user, register } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,12 +26,16 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+    if (password.length < TAMANHO_MINIMO_SENHA) {
+      setErrorMessage(`A senha precisa ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres.`);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      // Simulação enquanto a integração com a API não for iniciada
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      alert(`Conta criada com sucesso para ${name}! Redirecionando para login.`);
-      navigate("/login");
+      const sessao = await register({ name: name.trim(), email: email.trim(), password, role });
+      // O cadastro já inicia a sessão; "/" leva cada papel para a sua tela inicial.
+      navigate(sessao ? "/" : "/login", { replace: true });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setErrorMessage(err.message);
@@ -39,6 +46,11 @@ export const RegisterPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // Quem já está logado não precisa ver o formulário.
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f8fafc] relative overflow-hidden select-none">
@@ -125,7 +137,7 @@ export const RegisterPage: React.FC = () => {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Crie uma senha forte"
+              placeholder="Mínimo de 8 caracteres"
               startIcon={<Lock className="size-4" />}
               endIcon={
                 <button
