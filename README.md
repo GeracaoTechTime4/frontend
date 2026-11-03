@@ -15,6 +15,17 @@ As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitaca
 
 ---
 
+## Deploy (AWS)
+
+O front fica num bucket S3 privado servido pelo CloudFront em **https://dkrzib6ua831y.cloudfront.net**. No mesmo domínio, `/api/*` é encaminhado para a API (AWS Lambda Web Functions), então o cookie de sessão não é de terceiros e não há CORS em produção. Por isso o `VITE_API_URL` de produção (em [`.env.production`](.env.production)) termina em `/api`.
+
+```bash
+aws sso login --profile mario   # se a sessão tiver expirado
+AWS_PROFILE=mario bun run deploy
+```
+
+O script ([`scripts/deploy.sh`](scripts/deploy.sh)) faz o build e envia o `dist/` ao bucket: assets com hash ficam em cache por 1 ano e o `index.html` vai sem cache, então não é preciso invalidar o CloudFront.
+
 ## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
