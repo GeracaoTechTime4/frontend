@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AuthContext, type AuthContextValue } from "@/contexts/auth-context";
-import { fetchSession, loginUser, logoutUser, type UserSession } from "@/services/auth";
+import { fetchSession, loginUser, logoutUser, registerUser, type UserSession } from "@/services/auth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
@@ -26,6 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return sessao;
   }, []);
 
+  const register = useCallback<AuthContextValue["register"]>(async (data) => {
+    await registerUser(data);
+    const sessao = await fetchSession();
+    setUser(sessao);
+    return sessao;
+  }, []);
+
   const logout = useCallback<AuthContextValue["logout"]>(async () => {
     try {
       await logoutUser();
@@ -34,7 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
+  const value = useMemo(
+    () => ({ user, loading, login, register, logout }),
+    [user, loading, login, register, logout]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

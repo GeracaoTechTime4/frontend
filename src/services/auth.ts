@@ -1,10 +1,21 @@
 import { api } from "@/services/api";
+import { authClient } from "@/services/auth-client";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+/** Mínimo padrão do Better Auth para senhas (`emailAndPassword.minPasswordLength`). */
+export const TAMANHO_MINIMO_SENHA = 8;
 
 export interface LoginCredentials {
   email: string;
   password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  role: "SUPERVISOR" | "EMPLOYEE";
 }
 
 export interface UserSession {
@@ -40,6 +51,38 @@ export async function loginUser(credentials: LoginCredentials): Promise<UserSess
     throw new Error(
       "Não foi possível conectar ao servidor. Verifique se o backend está em execução.",
       { cause: error }
+    );
+  }
+}
+
+const MENSAGENS_CADASTRO: Record<string, string> = {
+  USER_ALREADY_EXISTS: "Já existe uma conta com este e-mail.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "Já existe uma conta com este e-mail.",
+  PASSWORD_TOO_SHORT: `A senha precisa ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres.`,
+  PASSWORD_TOO_LONG: "A senha é longa demais.",
+  INVALID_EMAIL: "E-mail inválido.",
+};
+
+/**
+ * Cria a conta no Better Auth. O backend já inicia a sessão (cookie) no cadastro,
+ * então em seguida basta buscar a sessão para ter o usuário logado.
+ */
+export async function registerUser(data: RegisterData): Promise<void> {
+  let resultado: Awaited<ReturnType<typeof authClient.signUp.email>>;
+
+  try {
+    resultado = await authClient.signUp.email(data);
+  } catch (error: unknown) {
+    throw new Error(
+      "Não foi possível conectar ao servidor. Verifique se o backend está em execução.",
+      { cause: error }
+    );
+  }
+
+  if (resultado.error) {
+    const { code, message } = resultado.error;
+    throw new Error(
+      (code && MENSAGENS_CADASTRO[code]) || message || "Erro ao criar conta. Tente novamente."
     );
   }
 }
