@@ -1,0 +1,66 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [developer]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ROLE_ARN: arn:aws:iam::666600766236:role/github-actions-shift-swap-frontend
+  PUBLIC_URL: https://dkrzib6ua831y.cloudfront.net
+
+jobs:
+  ci:
+    name: Lint e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run build
+
+  deploy:
+    name: Deploy no S3 + CloudFront
+    needs: ci
+    if: github.ref == 'refs/heads/developer' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: deploy-frontend
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Build (com .env.production) + envio do dist/ ao bucket.
+      - run: bun run deploy
+
+      # O index.html vai sem cache, então a versão nova aparece logo: confere se o bundle novo está sendo servido.
+      - name: Smoke test em produção
+        run: |
+          BUNDLE=$(grep -o 'assets/index-[^"]*\.js' dist/index.html | head -1)
+          for i in $(seq 1 12); do
+            if curl -sf "$PUBLIC_URL/" | grep -q "$BUNDLE" && curl -sf -o /dev/null "$PUBLIC_URL/$BUNDLE"; then
+              echo "Servindo $BUNDLE" && exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::O CloudFront não está servindo $BUNDLE" && exit 1
