@@ -1,7 +1,7 @@
 import { createAuthClient } from "better-auth/client";
 import { inferAdditionalFields } from "better-auth/client/plugins";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
+import { API_BASE_URL } from "@/services/api-url";
 
 export const authClient = createAuthClient({
   // URL completa das rotas de auth, como o resto do front já usa (`${API_BASE_URL}/api/auth/...`).

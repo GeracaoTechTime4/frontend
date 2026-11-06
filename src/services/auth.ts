@@ -1,7 +1,7 @@
 import { api } from "@/services/api";
 import { authClient } from "@/services/auth-client";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { API_BASE_URL } from "@/services/api-url";
 
 /** Mínimo padrão do Better Auth para senhas (`emailAndPassword.minPasswordLength`). */
 export const TAMANHO_MINIMO_SENHA = 8;

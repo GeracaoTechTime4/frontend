@@ -1,0 +1,5 @@
+{
+  "bucket": "shift-swap-frontend-staging-666600766236",
+  "publicUrl": "https://so-staging.mariochaves.click",
+  "deployRoleArn": "arn:aws:iam::666600766236:role/github-actions-shift-swap-frontend-staging"
+}

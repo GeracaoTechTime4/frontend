@@ -1,0 +1,84 @@
+name: Deploy
+
+# Publica o build já testado (artefato `dist` do job de CI) no bucket de um ambiente.
+# - ci-cd.yml chama para staging, com o build da própria execução.
+# - promote.yml chama para production, com o build de uma execução que já foi para staging.
+# O build é o mesmo nos dois ambientes: a URL da API vem do domínio da página (src/services/api-url.ts).
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment (staging, production)
+        required: true
+        type: string
+      config:
+        description: Configuração do ambiente (config/env/<ambiente>.json)
+        required: true
+        type: string
+      run_id:
+        description: Execução de onde vem o artefato dist (vazio = esta execução)
+        required: false
+        type: string
+        default: ""
+      ref:
+        description: Commit a usar no checkout; vazio = o da execução
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.config.outputs.public_url }}
+    concurrency:
+      group: deploy-frontend-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      AWS_REGION: us-east-1
+      DEPLOY_CONFIG: ${{ inputs.config }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          run-id: ${{ inputs.run_id || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Ler a configuração do ambiente
+        id: config
+        run: |
+          echo "DEPLOY_ROLE_ARN=$(jq -r .deployRoleArn "$DEPLOY_CONFIG")" >> "$GITHUB_ENV"
+          echo "PUBLIC_URL=$(jq -r .publicUrl "$DEPLOY_CONFIG")" >> "$GITHUB_ENV"
+          echo "public_url=$(jq -r .publicUrl "$DEPLOY_CONFIG")" >> "$GITHUB_OUTPUT"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Enviar ao S3
+        run: sh scripts/deploy.sh
+
+      # O index.html vai sem cache, então a versão nova aparece logo: confere se o bundle novo está sendo servido.
+      - name: Smoke test
+        run: |
+          BUNDLE=$(grep -o 'assets/index-[^"]*\.js' dist/index.html | head -1)
+          for i in $(seq 1 12); do
+            if curl -sf "$PUBLIC_URL/" | grep -q "$BUNDLE" && curl -sf -o /dev/null "$PUBLIC_URL/$BUNDLE"; then
+              echo "Servindo $BUNDLE" && exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::$PUBLIC_URL não está servindo $BUNDLE" && exit 1

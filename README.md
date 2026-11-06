@@ -11,26 +11,34 @@ O funcionário A pede a troca de um turno a um colega B. B aceita ou recusa; só
 | `/aprovacoes` | Supervisor | Aprovar ou rejeitar (com motivo) o que já foi aceito; filtro por estado |
 | `/gestao-turnos` | Supervisor | Cadastrar, editar e excluir turnos; listados por funcionário, do mais recente ao mais distante |
 
-As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitacao-estado.ts`](src/lib/solicitacao-estado.ts), que espelha a máquina de estados da lib `shift-swap`; o backend continua sendo quem valida. Precisa do backend com os endpoints de `/solicitacoes-troca`, `/funcionarios/colegas` e `/turnos/meus`; a gestão de turnos usa `GET/POST /turnos`, `PUT/DELETE /turnos/:id` e `GET /funcionarios` (exige backend com a lib `shift-swap` 0.5+); a URL vem de `VITE_API_URL`.
+As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitacao-estado.ts`](src/lib/solicitacao-estado.ts), que espelha a máquina de estados da lib `shift-swap`; o backend continua sendo quem valida. Precisa do backend com os endpoints de `/solicitacoes-troca`, `/funcionarios/colegas` e `/turnos/meus`; a gestão de turnos usa `GET/POST /turnos`, `PUT/DELETE /turnos/:id` e `GET /funcionarios` (exige backend com a lib `shift-swap` 0.5+); a URL da API vem de `VITE_API_URL` em desenvolvimento e do próprio domínio em produção (veja Deploy).
 
 ---
 
 ## Deploy (AWS)
 
-O front fica num bucket S3 privado servido pelo CloudFront em **https://dkrzib6ua831y.cloudfront.net**. No mesmo domínio, `/api/*` é encaminhado para a API (AWS Lambda Web Functions), então o cookie de sessão não é de terceiros e não há CORS em produção. Por isso o `VITE_API_URL` de produção (em [`.env.production`](.env.production)) termina em `/api`.
+Dois ambientes, cada um com um bucket S3 privado servido por um CloudFront que também encaminha `/api/*` para a API (AWS Lambda Web Functions):
+
+| Ambiente | URL | Config |
+|---|---|---|
+| staging | https://so-staging.mariochaves.click | [config/env/staging.json](config/env/staging.json) |
+| produção | https://so.mariochaves.click | [config/env/prod.json](config/env/prod.json) |
+
+Como front e API ficam no mesmo domínio, o build de produção chama a API em `${window.location.origin}/api` ([src/services/api-url.ts](src/services/api-url.ts)): sem CORS, com o cookie de sessão no próprio domínio, e **o mesmo build serve os dois ambientes**. Em desenvolvimento a URL vem de `VITE_API_URL` em [.env.development](.env.development).
+
+Deploy manual (o script envia o `dist/` ao bucket; assets com hash ficam em cache por 1 ano e o `index.html` vai sem cache, então não é preciso invalidar o CloudFront):
 
 ```bash
-aws sso login --profile mario   # se a sessão tiver expirado
-AWS_PROFILE=mario bun run deploy
+AWS_PROFILE=mario DEPLOY_CONFIG=config/env/staging.json bun run deploy
 ```
-
-O script ([`scripts/deploy.sh`](scripts/deploy.sh)) faz o build e envia o `dist/` ao bucket: assets com hash ficam em cache por 1 ano e o `index.html` vai sem cache, então não é preciso invalidar o CloudFront.
 
 ### CI/CD (GitHub Actions)
 
-O workflow [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) roda `lint` e `build` em todo PR. Em todo push na `developer`, faz também o deploy (`bun run deploy`) e confere se o CloudFront já está servindo o bundle novo.
+- **Todo PR:** `lint` e `build` ([ci-cd.yml](.github/workflows/ci-cd.yml)).
+- **Push na `developer`:** o mesmo build é publicado em **staging** ([deploy.yml](.github/workflows/deploy.yml)), com um smoke test que confere se o bundle novo está sendo servido.
+- **Produção:** Actions → **"Promover para produção"** → Run workflow ([promote.yml](.github/workflows/promote.yml)). Publica o build de uma execução que já passou por staging (sem `run_id`, a mais recente). Só roda a partir da `developer`.
 
-O GitHub acessa a AWS por OIDC, sem chaves guardadas: a role `github-actions-shift-swap-frontend` só pode ser assumida pela `developer` deste repositório e só escreve no bucket do front. Ela é criada pelo template `infra/github-actions-roles.yaml` do repositório do backend.
+O GitHub acessa a AWS por OIDC, sem chaves guardadas, com uma role por ambiente que só pode ser assumida por jobs do GitHub Environment correspondente (`staging` ou `production`) e só escreve no bucket daquele ambiente. As roles são criadas pela infra do repositório do backend (`infra/cdk`).
 
 ## React + TypeScript + Vite
 

@@ -1,9 +1,12 @@
 #!/usr/bin/env sh
-# Publica o build (dist/) no bucket S3 servido pelo CloudFront.
-# Uso: AWS_PROFILE=<perfil> bun run deploy
+# Publica o build (dist/) no bucket S3 de um ambiente, servido pelo CloudFront.
+# Uso: AWS_PROFILE=<perfil> DEPLOY_CONFIG=config/env/staging.json bun run deploy
+# (ou DEPLOY_BUCKET=<bucket> sh scripts/deploy.sh)
 set -eu
 
-BUCKET="${DEPLOY_BUCKET:-shift-swap-frontend-666600766236}"
+CONFIG="${DEPLOY_CONFIG:-config/env/staging.json}"
+BUCKET="${DEPLOY_BUCKET:-$(jq -r .bucket "$CONFIG")}"
+PUBLIC_URL="${PUBLIC_URL:-$(jq -r .publicUrl "$CONFIG")}"
 REGION="${AWS_REGION:-us-east-1}"
 
 # Assets com hash no nome: nunca mudam, cache de 1 ano.
@@ -20,4 +23,4 @@ aws s3 sync dist "s3://$BUCKET" --region "$REGION" \
 aws s3 cp dist/index.html "s3://$BUCKET/index.html" --region "$REGION" \
   --cache-control "no-cache" --content-type "text/html; charset=utf-8"
 
-echo "Publicado em https://dkrzib6ua831y.cloudfront.net"
+echo "Publicado em $PUBLIC_URL"
