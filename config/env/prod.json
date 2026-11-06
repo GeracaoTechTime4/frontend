@@ -1,5 +1,5 @@
 {
-  "bucket": "shift-swap-frontend-666600766236",
+  "bucket": "shift-swap-frontend-prod-666600766236",
   "publicUrl": "https://so.mariochaves.click",
-  "deployRoleArn": "arn:aws:iam::666600766236:role/github-actions-shift-swap-frontend"
+  "deployRoleArn": "arn:aws:iam::666600766236:role/github-actions-shift-swap-frontend-prod"
 }
