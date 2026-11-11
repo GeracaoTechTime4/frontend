@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { AtSign, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, User, ShieldCheck, UserCheck } from "lucide-react";
+import { AtSign, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, User } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +12,6 @@ export const RegisterPage: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"SUPERVISOR" | "EMPLOYEE">("SUPERVISOR");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -33,7 +32,7 @@ export const RegisterPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const sessao = await register({ name: name.trim(), email: email.trim(), password, role });
+      const sessao = await register({ name: name.trim(), email: email.trim(), password });
       // O cadastro já inicia a sessão; "/" leva cada papel para a sua tela inicial.
       navigate(sessao ? "/" : "/login", { replace: true });
     } catch (err: unknown) {
@@ -71,7 +70,7 @@ export const RegisterPage: React.FC = () => {
             Crie sua conta
           </h1>
           <p className="text-sm text-slate-500 mt-2 font-normal leading-relaxed">
-            Cadastre-se para gerenciar ou consultar escalas
+            Cadastre-se para consultar e trocar seus turnos
           </p>
         </div>
 
@@ -156,39 +155,6 @@ export const RegisterPage: React.FC = () => {
               autoComplete="new-password"
               required
             />
-          </div>
-
-          {/* Seleção de Perfil/Função */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-2">
-              Perfil de acesso
-            </label>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => setRole("SUPERVISOR")}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                  role === "SUPERVISOR"
-                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-600/20"
-                    : "border-slate-200 bg-[#eef3fb] text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <ShieldCheck className="size-4 shrink-0" />
-                <span>Supervisor</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole("EMPLOYEE")}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                  role === "EMPLOYEE"
-                    ? "border-blue-600 bg-blue-50 text-blue-700 ring-2 ring-blue-600/20"
-                    : "border-slate-200 bg-[#eef3fb] text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <UserCheck className="size-4 shrink-0" />
-                <span>Funcionário</span>
-              </button>
-            </div>
           </div>
 
           {/* Botão de Envio */}

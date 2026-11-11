@@ -11,9 +11,11 @@ export const authClient = createAuthClient({
   plugins: [
     inferAdditionalFields({
       user: {
+        // O papel é definido pelo servidor (todo cadastro é EMPLOYEE): só é lido da sessão.
         role: {
           type: "string",
           required: true,
+          input: false,
         },
       },
     }),
