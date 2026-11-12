@@ -1,9 +1,15 @@
 name: CI/CD
 
+# Mudanças só em documentação não rodam o pipeline. Um push com qualquer outro arquivo roda
+# normalmente. Para forçar: Actions → CI/CD → Run workflow.
 on:
   pull_request:
+    paths-ignore:
+      - "**.md"
   push:
     branches: [developer]
+    paths-ignore:
+      - "**.md"
   workflow_dispatch:
 
 permissions:
