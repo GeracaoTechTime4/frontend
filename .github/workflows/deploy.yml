@@ -46,10 +46,10 @@ jobs:
       AWS_REGION: us-east-1
       DEPLOY_CONFIG: ${{ inputs.config }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
@@ -63,7 +63,7 @@ jobs:
           echo "PUBLIC_URL=$(jq -r .publicUrl "$DEPLOY_CONFIG")" >> "$GITHUB_ENV"
           echo "public_url=$(jq -r .publicUrl "$DEPLOY_CONFIG")" >> "$GITHUB_OUTPUT"
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
