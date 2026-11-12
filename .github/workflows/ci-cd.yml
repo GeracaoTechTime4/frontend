@@ -37,11 +37,40 @@ jobs:
           path: dist/
           retention-days: 30
 
+  # E2E: o navegador usa o front buildado contra a API da main do backend, os dois rodando no job,
+  # com um PGlite descartável (playwright.config.ts). Nada de staging, dados reais ou rede externa.
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          repository: GeracaoTechTime4/backend
+          ref: main
+          path: backend
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:e2e
+        env:
+          BACKEND_DIR: backend
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
   # Push na developer: publica em staging. Prod sai pelo workflow "Promover para produção"
   # (promote.yml), que publica o mesmo build de uma execução que já passou por staging.
   staging:
     name: Staging
-    needs: ci
+    needs: [ci, e2e]
     if: github.ref == 'refs/heads/developer' && github.event_name != 'pull_request'
     permissions:
       contents: read

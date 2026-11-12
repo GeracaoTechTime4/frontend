@@ -15,6 +15,21 @@ As regras de quem pode fazer o quê em cada estado ficam em [`src/lib/solicitaca
 
 ---
 
+## Testes E2E (Playwright)
+
+```bash
+bunx playwright install chromium   # uma vez
+bun run test:e2e                   # sobe a API e o front sozinhos (~20 s)
+bunx playwright test --ui          # para depurar
+```
+
+Os testes ([e2e/](e2e/)) dirigem o front buildado (`vite preview`, porta 4173) contra a API do backend (porta 3000), os dois subidos pelo [playwright.config.ts](playwright.config.ts). O backend vem de `BACKEND_DIR` (padrão `../backend`, o repositório ao lado) e roda com um PGlite novo a cada execução, já com o seed (`supervisor@example.com`, `joao@example.com`, `maria@example.com`, senha `turno-local-seed-2026`). Nada de staging, dados reais ou rede externa: a API sobe com `AUTH_CHECK_PWNED=false` e se recusa a rodar com uma `DATABASE_URL` que não seja PGlite.
+
+Fluxos cobertos: cadastro e login, rotas protegidas por papel, gestão de turnos (criar, editar, excluir), troca aprovada (o turno muda de dono) e troca recusada/rejeitada. As regras em detalhe ficam nos testes de integração do backend.
+
+- **Seletores:** por label, papel e texto (`getByLabel`, `getByRole`), como um usuário enxerga a tela. Cada teste cria o seu turno com um horário único (`horarioUnico` em [e2e/helpers.ts](e2e/helpers.ts)) para achá-lo sem depender de ordem.
+- **CI:** o job `e2e` roda em todo PR e push na `developer`, contra a `main` do backend; o deploy em staging depende dele. Em falha, o relatório do Playwright (com trace e vídeo) fica nos artefatos da execução.
+
 ## Deploy (AWS)
 
 Dois ambientes, cada um com um bucket S3 privado servido por um CloudFront que também encaminha `/api/*` para a API (AWS Lambda Web Functions):
