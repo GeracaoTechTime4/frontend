@@ -70,7 +70,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Mensagem de Erro (se houver) */}
         {errorMessage && (
-          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-100 flex items-center gap-2.5 text-red-600 text-xs font-medium animate-in fade-in-50 duration-200">
+          <div role="alert" className="mb-5 p-3 rounded-xl bg-red-50 border border-red-100 flex items-center gap-2.5 text-red-600 text-xs font-medium animate-in fade-in-50 duration-200">
             <AlertCircle className="size-4 shrink-0 text-red-500" />
             <span>{errorMessage}</span>
           </div>
